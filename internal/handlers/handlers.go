@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
-	"github.com/eador/bookings/pkg/config"
-	"github.com/eador/bookings/pkg/models"
-	"github.com/eador/bookings/pkg/render"
+	"github.com/eador/bookings/internal/config"
+	"github.com/eador/bookings/internal/models"
+	"github.com/eador/bookings/internal/render"
 )
 
 // Repo the repositry used by the handlers
@@ -65,6 +67,27 @@ func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
 	end := r.Form.Get("end")
 	w.Write([]byte(fmt.Sprintf("Posted to search availabinity\nStart: %s\nEnd: %s", start, end)))
 	//render.RenderTemplate(w, "search-availability.page.html", &models.TemplateData{})
+}
+
+type jsonResponse struct {
+	OK      bool   `json:"ok"`
+	Message string `json:"message"`
+}
+
+// AvailabilityJSON handles request for availability and returns JSON response
+func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
+	resp := jsonResponse{
+		OK:      true,
+		Message: "available!",
+	}
+
+	out, err := json.MarshalIndent(resp, "", "  ")
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
 }
 
 // Contact is the contact page handler

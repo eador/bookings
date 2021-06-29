@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/alexedwards/scs/v2"
-	"github.com/eador/bookings/pkg/config"
-	"github.com/eador/bookings/pkg/handlers"
-	"github.com/eador/bookings/pkg/render"
+	"github.com/eador/bookings/internal/config"
+	"github.com/eador/bookings/internal/handlers"
+	"github.com/eador/bookings/internal/render"
 )
 
 const port = ":8080"

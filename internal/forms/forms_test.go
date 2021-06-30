@@ -1,15 +1,13 @@
 package forms
 
 import (
-	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"testing"
 )
 
 func TestForm_Valid(t *testing.T) {
-	r := httptest.NewRequest("POST", "/whatever", nil)
-	form := New(r.PostForm)
+	postedData := url.Values{}
+	form := New(postedData)
 
 	isValid := form.Valid()
 	if !isValid {
@@ -18,22 +16,19 @@ func TestForm_Valid(t *testing.T) {
 }
 
 func TestForm_Required(t *testing.T) {
-	r := httptest.NewRequest("POST", "/whatever", nil)
-	form := New(r.PostForm)
+	postedData := url.Values{}
+	form := New(postedData)
 
 	form.Required("a", "b", "c")
 	if form.Valid() {
 		t.Error("form shows valid when required field missing")
 	}
 
-	postedData := url.Values{}
+	postedData = url.Values{}
 	postedData.Add("a", "a")
 	postedData.Add("b", "b")
 	postedData.Add("c", "c")
-
-	r, _ = http.NewRequest("POST", "/whatever", nil)
-	r.PostForm = postedData
-	form = New(r.PostForm)
+	form = New(postedData)
 	form.Required("a", "b", "c")
 	if !form.Valid() {
 		t.Error("form shows invalid when all required fields exist")
@@ -41,20 +36,17 @@ func TestForm_Required(t *testing.T) {
 }
 
 func TestForm_Has(t *testing.T) {
-	r := httptest.NewRequest("POST", "/whatever", nil)
-	form := New(r.PostForm)
+	postedData := url.Values{}
+	form := New(postedData)
 
 	b := form.Has("a")
 	if b {
 		t.Error("form has field a when none was made")
 	}
 
-	postedData := url.Values{}
+	postedData = url.Values{}
 	postedData.Add("a", "a")
-
-	r, _ = http.NewRequest("POST", "/whatever", nil)
-	r.PostForm = postedData
-	form = New(r.PostForm)
+	form = New(postedData)
 	b = form.Has("a")
 	if !b {
 		t.Error("form does not have a field that was created")
@@ -64,10 +56,7 @@ func TestForm_Has(t *testing.T) {
 func TestForm_MinLength(t *testing.T) {
 	postedData := url.Values{}
 	postedData.Add("a", "aa")
-
-	r, _ := http.NewRequest("POST", "/whatever", nil)
-	r.PostForm = postedData
-	form := New(r.PostForm)
+	form := New(postedData)
 
 	b := form.MinLength("a", 1)
 	if !b {
@@ -92,9 +81,7 @@ func TestForm_IsEmail(t *testing.T) {
 	postedData := url.Values{}
 	postedData.Add("a", "a")
 	postedData.Add("b", "test@email.com")
-	r, _ := http.NewRequest("POST", "/whatever", nil)
-	r.PostForm = postedData
-	form := New(r.PostForm)
+	form := New(postedData)
 
 	form.IsEmail("b")
 	form.IsEmail("a")

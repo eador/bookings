@@ -6,11 +6,13 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/eador/bookings/internal/config"
+	"github.com/eador/bookings/internal/helpers"
 	"github.com/eador/bookings/internal/models"
 	"github.com/eador/bookings/internal/render"
 	"github.com/go-chi/chi/v5"
@@ -28,6 +30,11 @@ func getRoutes() http.Handler {
 	//change this value to true when in production
 	app.InProduction = false
 
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	app.InfoLog = infoLog
+	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	app.ErrorLog = errorLog
+
 	session = scs.New()
 	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true
@@ -44,6 +51,7 @@ func getRoutes() http.Handler {
 	repo := NewRepo(&app)
 	NewHandlers(repo)
 	render.NewTemplates(&app)
+	helpers.NewHelpers(&app)
 
 	mux := chi.NewRouter()
 

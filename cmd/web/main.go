@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"log"
 	"net/http"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/eador/bookings/internal/config"
 	"github.com/eador/bookings/internal/handlers"
+	"github.com/eador/bookings/internal/models"
 	"github.com/eador/bookings/internal/render"
 )
 
@@ -17,6 +19,7 @@ var app config.AppConfig
 var session *scs.SessionManager
 
 func main() {
+	gob.Register(models.Reservation{})
 	//change this value to true when in production
 	app.InProduction = false
 

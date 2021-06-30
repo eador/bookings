@@ -24,7 +24,8 @@ var theTests = []struct {
 	{"gq", "/generals-quarters", "get", []postData{}, http.StatusOK},
 	{"ms", "/majors-suite", "get", []postData{}, http.StatusOK},
 	{"contact", "/contact", "get", []postData{}, http.StatusOK},
-	{"sa", "/make-reservation", "get", []postData{}, http.StatusOK},
+	{"make-reservation", "/make-reservation", "get", []postData{}, http.StatusOK},
+	{"search-availability", "/search-availability", "get", []postData{}, http.StatusOK},
 
 	{"post-search-avail-json", "/search-availability-json", "post", []postData{
 		{key: "start", value: "2020-01-02"},

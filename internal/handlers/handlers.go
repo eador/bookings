@@ -80,9 +80,8 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 
 	form := forms.New(r.PostForm)
 
-	//form.Has("first_name", r)
 	form.Required("first_name", "last_name", "email")
-	form.MinLength("first_name", 3, r)
+	form.MinLength("first_name", 3)
 	form.IsEmail("email")
 
 	if !form.Valid() {
@@ -110,7 +109,6 @@ func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
 	start := r.Form.Get("start")
 	end := r.Form.Get("end")
 	w.Write([]byte(fmt.Sprintf("Posted to search availabinity\nStart: %s\nEnd: %s", start, end)))
-	//render.RenderTemplate(w, "search-availability.page.html", &models.TemplateData{})
 }
 
 type jsonResponse struct {

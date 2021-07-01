@@ -9,6 +9,7 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/eador/bookings/internal/config"
+	"github.com/eador/bookings/internal/driver"
 	"github.com/eador/bookings/internal/handlers"
 	"github.com/eador/bookings/internal/helpers"
 	"github.com/eador/bookings/internal/models"
@@ -23,10 +24,12 @@ var infoLog *log.Logger
 var errorLog *log.Logger
 
 func main() {
-	err := run()
+	db, err := run()
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.SQL.Close()
+
 	log.Println("Starting application on port", port[1:])
 	srv := &http.Server{
 		Addr:    port,
@@ -37,7 +40,7 @@ func main() {
 	log.Fatal(err)
 }
 
-func run() error {
+func run() (*driver.DB, error) {
 	gob.Register(models.Reservation{})
 	//change this value to true when in production
 	app.InProduction = false
@@ -54,17 +57,26 @@ func run() error {
 	session.Cookie.Secure = app.InProduction
 	app.Session = session
 
+	// connect to database
+	log.Println("Connecting to database...")
+	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=bookings user=corey.slate password=")
+	if err != nil {
+		log.Fatalln("Cannot connect to database! Dying...")
+	}
+	defer db.SQL.Close()
+
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("cannot create template cache")
-		return err
+		return nil, err
 	}
+
 	app.TemplateCache = tc
 	app.UseCache = false
-	repo := handlers.NewRepo(&app)
+	repo := handlers.NewRepo(&app, db)
 	handlers.NewHandlers(repo)
 	render.NewTemplates(&app)
 	helpers.NewHelpers(&app)
 
-	return nil
+	return db, nil
 }

@@ -1,3 +1,5 @@
 .DS_Store
 database.yml
 coverage.out
+bookings
+run.sh

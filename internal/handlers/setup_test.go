@@ -12,6 +12,7 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/eador/bookings/internal/config"
+	"github.com/eador/bookings/internal/driver"
 	"github.com/eador/bookings/internal/helpers"
 	"github.com/eador/bookings/internal/models"
 	"github.com/eador/bookings/internal/render"
@@ -42,15 +43,22 @@ func getRoutes() http.Handler {
 	session.Cookie.Secure = app.InProduction
 	app.Session = session
 
+	// connect to database
+	log.Println("Connecting to database...")
+	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=bookings user=corey.slate password=")
+	if err != nil {
+		log.Fatalln("Cannot connect to database! Dying...")
+	}
+
 	tc, err := CreateTestTemplateCache()
 	if err != nil {
 		log.Fatal("cannot create template cache")
 	}
 	app.TemplateCache = tc
 	app.UseCache = true
-	repo := NewRepo(&app)
+	repo := NewRepo(&app, db)
 	NewHandlers(repo)
-	render.NewTemplates(&app)
+	render.NewRenderer(&app)
 	helpers.NewHelpers(&app)
 
 	mux := chi.NewRouter()

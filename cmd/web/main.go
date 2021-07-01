@@ -42,6 +42,9 @@ func main() {
 
 func run() (*driver.DB, error) {
 	gob.Register(models.Reservation{})
+	gob.Register(models.User{})
+	gob.Register(models.Room{})
+	gob.Register(models.Restriction{})
 	//change this value to true when in production
 	app.InProduction = false
 
@@ -63,7 +66,6 @@ func run() (*driver.DB, error) {
 	if err != nil {
 		log.Fatalln("Cannot connect to database! Dying...")
 	}
-	defer db.SQL.Close()
 
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
@@ -75,7 +77,7 @@ func run() (*driver.DB, error) {
 	app.UseCache = false
 	repo := handlers.NewRepo(&app, db)
 	handlers.NewHandlers(repo)
-	render.NewTemplates(&app)
+	render.NewRenderer(&app)
 	helpers.NewHelpers(&app)
 
 	return db, nil

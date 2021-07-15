@@ -51,7 +51,7 @@ func TestTemplates(t *testing.T) {
 	}
 }
 
-func TestNewTemplates(t *testing.T) {
+func TestNewRenderer(t *testing.T) {
 	NewRenderer(app)
 }
 

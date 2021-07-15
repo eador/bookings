@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"testing"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/eador/bookings/internal/config"
-	"github.com/eador/bookings/internal/driver"
 	"github.com/eador/bookings/internal/helpers"
 	"github.com/eador/bookings/internal/models"
 	"github.com/eador/bookings/internal/render"
@@ -26,7 +26,7 @@ var session *scs.SessionManager
 var pathToTemplates = "./../../templates"
 var functions = template.FuncMap{}
 
-func getRoutes() http.Handler {
+func TestMain(m *testing.M) {
 	gob.Register(models.Reservation{})
 	//change this value to true when in production
 	app.InProduction = false
@@ -43,28 +43,26 @@ func getRoutes() http.Handler {
 	session.Cookie.Secure = app.InProduction
 	app.Session = session
 
-	// connect to database
-	log.Println("Connecting to database...")
-	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=bookings user=corey.slate password=")
-	if err != nil {
-		log.Fatalln("Cannot connect to database! Dying...")
-	}
-
 	tc, err := CreateTestTemplateCache()
 	if err != nil {
 		log.Fatal("cannot create template cache")
 	}
+
 	app.TemplateCache = tc
 	app.UseCache = true
-	repo := NewRepo(&app, db)
+
+	repo := NewTestRepo(&app)
 	NewHandlers(repo)
 	render.NewRenderer(&app)
 	helpers.NewHelpers(&app)
 
+	os.Exit(m.Run())
+}
+
+func getRoutes() http.Handler {
 	mux := chi.NewRouter()
 
 	mux.Use(middleware.Recoverer)
-	//mux.Use(NoSurf)
 	mux.Use(SessionLoad)
 
 	mux.Get("/", Repo.Home)

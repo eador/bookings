@@ -287,6 +287,76 @@ func TestRepository_AvailabilityJSON(t *testing.T) {
 
 }
 
+func TestRepository_ReservationSummary(t *testing.T) {
+	req, _ := http.NewRequest("GET", "/reservation-summary", nil)
+	ctx := GetCtx(req)
+	req = req.WithContext(ctx)
+
+	handler := http.HandlerFunc(Repo.ReservationSummary)
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("error got status %d", rr.Code)
+	}
+
+	reservation := models.Reservation{
+		RoomID: 1,
+		Room: models.Room{
+			ID:       1,
+			RoomName: "General's Quarters",
+		},
+	}
+	req, _ = http.NewRequest("GET", "/reservation-summary", nil)
+	ctx = GetCtx(req)
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr = httptest.NewRecorder()
+	session.Put(ctx, "reservation", reservation)
+	handler = http.HandlerFunc(Repo.ReservationSummary)
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("Reservation handlers returned wrong response code: got %d, wanted %d", rr.Code, http.StatusOK)
+	}
+}
+
+var availabilityTests = []struct {
+	name    string
+	reqBody io.Reader
+	code    int
+	message string
+}{
+	{"Available", strings.NewReader("start=2050-01-01&end=2050-01-02"), http.StatusOK, " "},
+	{"No Form", nil, http.StatusTemporaryRedirect, "can't parse form"},
+	{"Bad Start", strings.NewReader("start=Bad&end=2050-01-02"), http.StatusTemporaryRedirect, "can't parse start date"},
+	{"Bad End", strings.NewReader("start=2050-01-01&end=BAD"), http.StatusTemporaryRedirect, "can't parse end date"},
+	{"DB Error", strings.NewReader("start=1050-01-01&end=1050-01-02"), http.StatusTemporaryRedirect, "can't access database"},
+	{"No Rooms", strings.NewReader("start=1050-01-01&end=2050-01-02"), http.StatusSeeOther, "No Availability"},
+}
+
+func TestRepository_PostAvailability(t *testing.T) {
+	for _, i := range availabilityTests {
+		req, _ := http.NewRequest("POST", "/search-availability", i.reqBody)
+		ctx := GetCtx(req)
+		req = req.WithContext(ctx)
+
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		handler := http.HandlerFunc(Repo.PostAvailability)
+
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, req)
+		if rr.Code != i.code {
+			t.Errorf("Error in test %s expected code %d got %d", i.name, i.code, rr.Code)
+		}
+		if session.Get(ctx, "error") != nil {
+			if fmt.Sprintf("%s", session.Get(ctx, "error")) != i.message {
+				t.Errorf("Error in test %s expected message %s got %s", i.name, i.message, session.Get(ctx, "error"))
+			}
+		}
+	}
+}
 func GetCtx(req *http.Request) context.Context {
 	ctx, err := session.Load(req.Context(), req.Header.Get("X-Session"))
 	if err != nil {

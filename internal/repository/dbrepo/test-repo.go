@@ -41,6 +41,16 @@ func (m *testDBRepo) SearchAvailabilityByDatesByRoomID(start time.Time, end time
 // SearchAvailabilityForAllRooms returns a slice of available rooms if any for a given start and end date
 func (m *testDBRepo) SearchAvailablitiyForAllRooms(start, end time.Time) ([]models.Room, error) {
 	var rooms []models.Room
+	if start.Before(time.Now()) {
+		if end.Before(time.Now()) {
+			return rooms, errors.New("some error")
+		} else {
+			return rooms, nil
+		}
+	}
+	var room models.Room
+
+	rooms = append(rooms, room)
 	return rooms, nil
 }
 

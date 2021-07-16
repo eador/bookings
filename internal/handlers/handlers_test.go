@@ -321,6 +321,58 @@ func TestRepository_ReservationSummary(t *testing.T) {
 	}
 }
 
+var chooseRoomsTests = []struct {
+	name string
+	url  string
+	code int
+}{
+	{"Available", "/choose-room/1", http.StatusSeeOther},
+	{"Bad Params", "/choose-room/fish", http.StatusTemporaryRedirect},
+	//{"No Reservation", "/choose-room/1", http.StatusTemporaryRedirect, models.Reservation{}},
+}
+
+func TestRepository_ChooseRoom(t *testing.T) {
+
+	for _, i := range chooseRoomsTests {
+		reservation := models.Reservation{
+			RoomID: 1,
+			Room: models.Room{
+				ID:       1,
+				RoomName: "General's Quarters",
+			},
+		}
+		req, _ := http.NewRequest("GET", i.url, nil)
+		ctx := GetCtx(req)
+		session.Put(ctx, "reservation", reservation)
+		req = req.WithContext(ctx)
+		req.RequestURI = i.url
+
+		handler := http.HandlerFunc(Repo.ChooseRoom)
+
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, req)
+
+		if rr.Code != i.code {
+			t.Errorf("Error in test %s expected status %d but got %d", i.name, i.code, rr.Code)
+		}
+	}
+
+	// Test no reservation
+	req, _ := http.NewRequest("GET", "/choose-room/1", nil)
+	ctx := GetCtx(req)
+	req = req.WithContext(ctx)
+	req.RequestURI = "/choose-room/1"
+
+	handler := http.HandlerFunc(Repo.ChooseRoom)
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusTemporaryRedirect {
+		t.Errorf("Error in test No Reservation expected status %d but got %d", http.StatusTemporaryRedirect, rr.Code)
+	}
+}
+
 var availabilityTests = []struct {
 	name    string
 	reqBody io.Reader

@@ -584,6 +584,6 @@ func (m *Repository) AdminProcessReservation(w http.ResponseWriter, r *http.Requ
 		helpers.ServerError(w, err)
 		return
 	}
-	m.App.Session.Put(r.Context(), "flash", "reservation Marked as processed")
+	m.App.Session.Put(r.Context(), "flash", "Reservation Marked as processed")
 	http.Redirect(w, r, fmt.Sprintf("/admin/reservations-%s", src), http.StatusSeeOther)
 }

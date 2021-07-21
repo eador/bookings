@@ -76,10 +76,10 @@ func (m *testDBRepo) UpdateUser(u models.User) error {
 
 // Authenticate authentices a user
 func (m *testDBRepo) Authenticate(email, testPassword string) (int, string, error) {
-	var id int
-	var hashedPassword string
-
-	return id, hashedPassword, nil
+	if email == "me@here.com" {
+		return 1, "", nil
+	}
+	return 0, "", errors.New("some error")
 }
 
 // AllReservations returns a slice of all reservations
